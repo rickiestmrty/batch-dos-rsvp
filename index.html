@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0f2a" />
+  <title>Batch Dos Reunion</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="phone" id="phone">
+    <!-- Wallpaper -->
+    <div class="wallpaper" aria-hidden="true">
+      <div class="stars"></div>
+    </div>
+
+    <!-- Status bar -->
+    <header class="status-bar">
+      <span class="carrier">Smart LTE</span>
+      <span class="status-icons" aria-hidden="true">
+        <svg viewBox="0 0 18 12" class="ic-signal"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+        <svg viewBox="0 0 16 12" class="ic-wifi"><path d="M8 11.5 5.6 9a3.4 3.4 0 0 1 4.8 0L8 11.5Zm-4.2-4.3L2.2 5.6a8.2 8.2 0 0 1 11.6 0l-1.6 1.6a5.9 5.9 0 0 0-8.4 0ZM.6 4 0 3.4a11.3 11.3 0 0 1 16 0l-.6.6-1 1a9.9 9.9 0 0 0-12.8 0L.6 4Z"/></svg>
+        <span class="battery"><span class="battery-level"></span></span>
+      </span>
+    </header>
+
+    <!-- Lock + clock -->
+    <section class="clock-area">
+      <svg class="lock-icon" viewBox="0 0 14 18" aria-hidden="true"><path d="M3 7V5a4 4 0 1 1 8 0v2h.5A1.5 1.5 0 0 1 13 8.5v7A1.5 1.5 0 0 1 11.5 17h-9A1.5 1.5 0 0 1 1 15.5v-7A1.5 1.5 0 0 1 2.5 7H3Zm1.6 0h4.8V5a2.4 2.4 0 1 0-4.8 0v2Z"/></svg>
+      <p class="date" id="date">Wednesday, October 29</p>
+      <h1 class="time" id="time">7:04</h1>
+    </section>
+
+    <!-- Notifications + now playing -->
+    <section class="stack" id="stack">
+      <!-- Now playing -->
+      <article class="player" id="player" aria-label="Now playing on SpotiBai">
+        <div class="player-top">
+          <div class="album-art" aria-hidden="true">
+            <span class="album-art-text">PARTY<br/>IN<br/>BAKHAWAN</span>
+          </div>
+          <div class="track">
+            <p class="track-title">Party in Bakhawan</p>
+            <p class="track-artist">Miley Cyrus</p>
+          </div>
+          <div class="spotibai" title="SpotiBai">
+            <span class="spotibai-logo" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#1ed760"/><path d="M6.2 9.3c3.9-1.1 8.3-.8 11.6 1.1M7 12.5c3.2-.9 6.6-.6 9.3.9M7.8 15.5c2.5-.6 4.9-.4 6.9.7" stroke="#000" stroke-width="1.7" stroke-linecap="round" fill="none"/></svg>
+            </span>
+            <span class="spotibai-name">SpotiBai</span>
+          </div>
+        </div>
+        <div class="progress">
+          <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+          <div class="progress-times">
+            <span id="elapsed">0:00</span>
+            <span id="remaining">-3:27</span>
+          </div>
+        </div>
+        <div class="controls">
+          <svg viewBox="0 0 32 20" class="ctl" aria-hidden="true"><path d="M15 2v16L3 10l12-8Zm14 0v16L17 10l12-8Z"/></svg>
+          <button class="play-toggle" id="play-toggle" type="button" aria-label="Pause">
+            <svg viewBox="0 0 20 22" class="ctl ctl--pause"><rect x="2" y="1" width="5" height="20" rx="1.5"/><rect x="13" y="1" width="5" height="20" rx="1.5"/></svg>
+            <svg viewBox="0 0 20 22" class="ctl ctl--play"><path d="M3 1.8v18.4a1 1 0 0 0 1.5.86l15-9.2a1 1 0 0 0 0-1.72l-15-9.2A1 1 0 0 0 3 1.8Z"/></svg>
+          </button>
+          <svg viewBox="0 0 32 20" class="ctl" aria-hidden="true"><path d="M3 2v16l12-8L3 2Zm14 0v16l12-8-12-8Z"/></svg>
+        </div>
+      </article>
+
+      <!-- Calendar invite (appears after the memories) -->
+      <button class="notif notif--calendar notif--cta" id="notif-calendar" type="button" aria-haspopup="dialog" aria-label="Google Calendar invitation: Batch Dos Reunion, Saturday December 26. Tap to RSVP">
+        <span class="app-icon app-icon--calendar" aria-hidden="true">
+          <span class="cal-month">DEC</span>
+          <span class="cal-day">26</span>
+        </span>
+        <span class="notif-body">
+          <span class="notif-head">
+            <span class="notif-app">Google Calendar</span>
+            <span class="notif-when">now</span>
+          </span>
+          <span class="notif-title">Invitation: Batch Dos Reunion</span>
+          <span class="notif-text">Sat, Dec 26 · Tap to RSVP</span>
+        </span>
+        <span class="tap-hint" aria-hidden="true">
+          <span class="tap-ring"></span>
+          <span class="tap-dot"></span>
+        </span>
+      </button>
+
+      <!-- Photos (appears last, lands on top) -->
+      <button class="notif notif--photos notif--cta" id="notif-photos" type="button" aria-label="Photos: Memories from 2013. Click to see your highschool memories">
+        <span class="app-icon app-icon--photos" aria-hidden="true">
+          <svg viewBox="0 0 40 40">
+            <g transform="translate(20 20)">
+              <ellipse rx="5" ry="9" cy="-8" fill="#f5b52b" opacity=".9"/>
+              <ellipse rx="5" ry="9" cy="-8" fill="#f07c2a" opacity=".85" transform="rotate(45)"/>
+              <ellipse rx="5" ry="9" cy="-8" fill="#e6475a" opacity=".85" transform="rotate(90)"/>
+              <ellipse rx="5" ry="9" cy="-8" fill="#b34fb3" opacity=".85" transform="rotate(135)"/>
+              <ellipse rx="5" ry="9" cy="-8" fill="#5f6fdc" opacity=".85" transform="rotate(180)"/>
+              <ellipse rx="5" ry="9" cy="-8" fill="#3fa9e8" opacity=".85" transform="rotate(225)"/>
+              <ellipse rx="5" ry="9" cy="-8" fill="#4fc46b" opacity=".85" transform="rotate(270)"/>
+              <ellipse rx="5" ry="9" cy="-8" fill="#c2d93a" opacity=".85" transform="rotate(315)"/>
+            </g>
+          </svg>
+        </span>
+        <span class="notif-body">
+          <span class="notif-head">
+            <span class="notif-app">Photos</span>
+            <span class="notif-when">now</span>
+          </span>
+          <span class="notif-title">Memories from 2013</span>
+          <span class="notif-text">Click to see your highschool memories</span>
+        </span>
+        <span class="memory-thumb" aria-hidden="true">
+          <span class="memory-year">2013</span>
+        </span>
+        <span class="tap-hint" aria-hidden="true">
+          <span class="tap-ring"></span>
+          <span class="tap-dot"></span>
+        </span>
+      </button>
+
+      <!-- Messenger -->
+      <article class="notif notif--messenger" id="notif-messenger">
+        <span class="avatar" aria-hidden="true">
+          JM
+          <span class="avatar-badge">
+            <svg viewBox="0 0 24 24"><path fill="#fff" d="M12 2C6.36 2 2 6.13 2 11.7c0 2.91 1.19 5.44 3.14 7.17.16.15.26.35.27.57l.05 1.78a.8.8 0 0 0 1.12.71l1.98-.87a.8.8 0 0 1 .53-.04c.91.25 1.88.38 2.91.38 5.64 0 10-4.13 10-9.7C22 6.13 17.64 2 12 2Zm6 7.46-2.94 4.66a1.5 1.5 0 0 1-2.17.4l-2.34-1.75a.6.6 0 0 0-.72 0l-3.16 2.4c-.42.32-.97-.18-.69-.63l2.94-4.66a1.5 1.5 0 0 1 2.17-.4l2.34 1.75a.6.6 0 0 0 .72 0l3.16-2.4c.42-.32.97.18.69.63Z"/></svg>
+          </span>
+        </span>
+        <span class="notif-body">
+          <span class="notif-head">
+            <span class="notif-app notif-app--strong">Jola Monteclar</span>
+            <span class="notif-when">now</span>
+          </span>
+          <span class="notif-text">Dayun ang reunion dae!!</span>
+        </span>
+      </article>
+
+    </section>
+
+    <!-- Bottom shortcuts -->
+    <footer class="lock-footer" aria-hidden="true">
+      <span class="quick-btn">
+        <svg viewBox="0 0 24 24"><path d="M8 2h8l-1 6H9L8 2Zm1 7h6v12a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1V9Zm3 3a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4Z"/></svg>
+      </span>
+      <span class="quick-btn">
+        <svg viewBox="0 0 24 24"><path d="M9 4h6l1.5 2H20a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3.5L9 4Zm3 4.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Zm0 2a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5Z"/></svg>
+      </span>
+      <span class="home-indicator"></span>
+    </footer>
+
+    <!-- Invite details + RSVP -->
+    <div class="sheet-backdrop" id="invite" hidden>
+      <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="invite-title">
+        <span class="sheet-grabber" aria-hidden="true"></span>
+        <button class="sheet-close" id="invite-close" type="button" aria-label="Close">
+          <svg viewBox="0 0 14 14"><path d="M2 2l10 10M12 2 2 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+
+        <p class="sheet-kicker">Google Calendar · Invitation</p>
+        <h2 class="sheet-title" id="invite-title"><span class="event-chip" aria-hidden="true"></span>Batch Dos Reunion</h2>
+
+        <ul class="event-details">
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2V2h-2v2H9V2H7Zm-2 7h14v11H5V9Z"/></svg>
+            <span>Saturday, December 26, 2026</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z"/></svg>
+            <span>Bakhawan Beach Home<br/>
+              <a class="ig-link" href="https://www.instagram.com/bakhawanbeachhome/" target="_blank" rel="noopener">Instagram: @bakhawanbeachhome ↗</a>
+            </span>
+          </li>
+        </ul>
+
+        <!-- Step 1: answer -->
+        <div class="rsvp" data-step="ask">
+          <p class="rsvp-q">Going?</p>
+          <div class="rsvp-buttons">
+            <button class="btn btn--primary" id="rsvp-accept" type="button">Accept</button>
+            <button class="btn btn--ghost" id="rsvp-maybe" type="button">I don't know yet</button>
+          </div>
+        </div>
+
+        <!-- Step 2: name (after Accept) -->
+        <form class="rsvp" data-step="name" id="rsvp-form" hidden>
+          <label class="rsvp-q" for="rsvp-name">Yay! What's your name?</label>
+          <input class="rsvp-input" id="rsvp-name" name="name" type="text" autocomplete="name" placeholder="Your name" maxlength="60" required />
+          <button class="btn btn--primary btn--full" type="submit">Send RSVP</button>
+        </form>
+
+        <!-- Step 3a: accepted -->
+        <div class="rsvp rsvp-done" data-step="done" hidden>
+          <span class="rsvp-check" aria-hidden="true">✓</span>
+          <p class="rsvp-done-title">See you there, <span id="rsvp-done-name"></span>!</p>
+          <p class="rsvp-done-sub">Saturday, December 26 · Bakhawan Beach Home</p>
+        </div>
+
+        <!-- Step 3b: not sure yet -->
+        <div class="rsvp rsvp-done" data-step="maybe" hidden>
+          <p class="rsvp-done-title">No worries!</p>
+          <p class="rsvp-done-sub">Open this link again anytime to RSVP.</p>
+          <button class="btn btn--ghost btn--full" id="rsvp-change" type="button">Actually, I'm going</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- Highschool photos fly out of the 2013 thumbnail here -->
+    <div class="memories" id="memories" aria-hidden="true"></div>
+  </main>
+
+  <audio id="song" src="assets/party-in-the-usa.webm" preload="auto"></audio>
+
+  <script src="script.js"></script>
+</body>
+</html>
