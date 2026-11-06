@@ -8,7 +8,8 @@
   },
   "scripts": {
     "dev": "node --env-file=.env.local server.mjs",
-    "test": "node --test 'lib/**/*.test.js'"
+    "test": "node --test 'lib/**/*.test.js'",
+    "format-rsvp": "node --env-file=.env.local scripts/format-rsvp.mjs"
   },
   "dependencies": {
     "google-auth-library": "^11.0.2"
