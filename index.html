@@ -5,14 +5,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#0b0f2a" />
   <title>Batch Dos Reunion</title>
-  <!-- Kalam: ballpen handwriting for the notebook sched -->
+  <meta name="description" content="You're invited: Batch Dos Reunion, Saturday, December 26 at Bakhawan Beach Home. Tap to RSVP." />
+
+  <!-- Link preview when it's shared into the group chat. Same cover as batch-dos-reunion. -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://batch-dos-rsvp.vercel.app/" />
+  <meta property="og:title" content="Asa na' ta? · Batch Dos Reunion" />
+  <meta property="og:description" content="Sat, Dec 26 · Bakhawan Beach Home. Tap to RSVP." />
+  <meta property="og:image" content="https://batch-dos-rsvp.vercel.app/assets/og.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="675" />
+  <meta property="og:image:alt" content="Asa na' ta? — nine years later" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Asa na' ta? · Batch Dos Reunion" />
+  <meta name="twitter:description" content="Sat, Dec 26 · Bakhawan Beach Home. Tap to RSVP." />
+  <meta name="twitter:image" content="https://batch-dos-rsvp.vercel.app/assets/og.jpg" />
+
+  <!-- Kalam: ballpen handwriting for the notebook sched. Loaded without blocking the
+       first paint: on slow mobile data the lock screen shows first, the font swaps in. -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&display=swap" media="print" onload="this.media='all'" />
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&display=swap" /></noscript>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <main class="phone" id="phone">
+  <main class="phone is-waiting" id="phone">
     <!-- Wallpaper -->
     <div class="wallpaper" aria-hidden="true">
       <div class="stars"></div>
@@ -143,6 +161,9 @@
 
     </section>
 
+    <!-- Before the first tap: just the lock screen and this. The song card comes in on the tap. -->
+    <p class="wake-prompt">Tap anywhere</p>
+
     <!-- Bottom shortcuts -->
     <footer class="lock-footer" aria-hidden="true">
       <span class="quick-btn">
@@ -228,11 +249,24 @@
           </div>
         </div>
 
-        <!-- Step 2: name (after Accept) -->
-        <form class="rsvp" data-step="name" id="rsvp-form" hidden>
+        <!-- Step 2: name (after Accept) — picked from the batch list -->
+        <form class="rsvp" data-step="name" id="rsvp-form" hidden novalidate>
           <label class="rsvp-q" for="rsvp-name">Yay! What's your name?</label>
-          <input class="rsvp-input" id="rsvp-name" name="name" type="text" autocomplete="name" placeholder="Your name" maxlength="60" required />
-          <button class="btn btn--primary btn--full" type="submit">Send RSVP</button>
+          <!-- Same picker as batch-dos-reunion: type, and the batch list narrows below -->
+          <div class="name-field">
+            <svg class="name-field-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.6-3.6" /></svg>
+            <input id="rsvp-name" name="name" type="search" autocomplete="off" autocapitalize="words" spellcheck="false" enterkeyhint="go"
+              placeholder="Type your name" maxlength="60"
+              role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="name-options" aria-describedby="name-hint" />
+          </div>
+          <ul class="name-options" id="name-options" role="listbox" aria-label="Names on the batch list"></ul>
+          <p class="name-hint" id="name-hint" aria-live="polite">Pick your name from the batch list.</p>
+          <!-- idle -> sending (spinner) -> sent (shrinks to a green circle, check draws on) -->
+          <button class="btn btn--primary btn--full btn-send" id="rsvp-send" type="submit" data-state="idle" disabled>
+            <span class="btn-spinner" aria-hidden="true"></span>
+            <span class="btn-label">Send RSVP</span>
+            <svg class="btn-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 12.5l4.2 4.2L18.5 7.8" /></svg>
+          </button>
         </form>
 
         <!-- Step 3a: accepted -->
@@ -240,6 +274,14 @@
           <span class="rsvp-check" aria-hidden="true">✓</span>
           <p class="rsvp-done-title">See you there, <span id="rsvp-done-name"></span>!</p>
           <p class="rsvp-done-sub">Saturday, December 26 · Bakhawan Beach Home</p>
+        </div>
+
+        <!-- Step 3a': that name has already said yes -->
+        <div class="rsvp rsvp-done" data-step="already" hidden>
+          <span class="rsvp-check" aria-hidden="true">✓</span>
+          <p class="rsvp-done-title">You've already responded, <span id="rsvp-already-name"></span>!</p>
+          <p class="rsvp-done-sub">We have you down as going. See you on December 26.</p>
+          <button class="btn btn--ghost btn--full" id="rsvp-not-me" type="button">That's not me</button>
         </div>
 
         <!-- Step 3b: not sure yet -->
@@ -253,9 +295,16 @@
 
     <!-- Highschool photos fly out of the 2013 thumbnail here -->
     <div class="memories" id="memories" aria-hidden="true"></div>
+    <!-- Same quiet Skip as batch-dos-reunion's intro: a way out, not the main event -->
+    <button class="memories-skip" id="memories-skip" type="button" aria-label="Skip the photos" hidden>Skip <span aria-hidden="true">→</span></button>
   </main>
 
-  <audio id="song" src="assets/party-in-the-usa.webm" preload="auto"></audio>
+  <!-- Opus where it plays, AAC for older iPhones. Metadata only up front: the song
+       streams once it starts instead of racing the page for bandwidth. -->
+  <audio id="song" preload="metadata" playsinline>
+    <source src="assets/song.webm" type="audio/webm; codecs=opus" />
+    <source src="assets/song.m4a" type="audio/mp4" />
+  </audio>
 
   <script src="script.js"></script>
 </body>

@@ -43,12 +43,17 @@
     phone.classList.toggle('is-paused', !playing);
     playToggle.setAttribute('aria-label', playing ? 'Pause' : 'Play');
   };
+  setPlayingUI(false); // nothing is playing until the browser lets it
   song.addEventListener('play', () => setPlayingUI(true));
   song.addEventListener('pause', () => setPlayingUI(false));
   song.loop = true;
 
   let userPaused = false;
   playToggle.addEventListener('click', () => {
+    if (skipToggleClick) {
+      skipToggleClick = false;
+      return;
+    }
     if (song.paused) {
       userPaused = false;
       song.play().catch(() => {});
@@ -84,31 +89,74 @@
     if (audioCtx && audioCtx.state !== 'running') audioCtx.resume().catch(() => {});
     if (song.paused && !userPaused) song.play().catch(() => {});
   }
-  startAudio();
-  ['pointerdown', 'touchstart', 'keydown'].forEach((type) => {
-    window.addEventListener(type, startAudio, { passive: true });
-  });
+  const UNLOCK_EVENTS = ['pointerdown', 'touchstart', 'keydown'];
+  let skipToggleClick = false;
+  function unlock(e) {
+    // A first tap that lands on the pause button would start the song and then
+    // immediately pause it again with the click that follows.
+    if (song.paused && e.target.closest && e.target.closest('#play-toggle')) skipToggleClick = true;
+    startAudio();
+    startIntro();
+  }
+  UNLOCK_EVENTS.forEach((type) => window.addEventListener(type, unlock, { passive: true }));
+
+  // The Messenger ding has to land with its card, and browsers drop any sound made
+  // before the visitor's first tap. So when sound is still locked, the intro waits on
+  // the lock screen ("Tap to wake") and that first tap starts the song and the
+  // notifications together. Where sound is allowed straight away, it just starts.
+  let introStarted = false;
+  function startIntro() {
+    if (introStarted) return;
+    introStarted = true;
+    phone.classList.remove('is-waiting');
+    runIntro();
+  }
+  if (audioCtx) audioCtx.resume().catch(() => {});
+  song.play()
+    .then(startIntro)
+    .catch(() => { if (!introStarted) phone.classList.add('is-waiting'); });
   song.addEventListener('playing', () => {
-    ['pointerdown', 'touchstart', 'keydown'].forEach((type) => {
-      window.removeEventListener(type, startAudio);
-    });
+    UNLOCK_EVENTS.forEach((type) => window.removeEventListener(type, unlock));
   }, { once: true });
+
+  // Phones keep a page's sound going after you switch apps, lock the screen or close
+  // the tab, until the browser gets round to killing it. Stop it the moment the page is
+  // out of sight, and pick up where it left off when they come back.
+  let resumeOnReturn = false;
+  function goQuiet() {
+    if (!song.paused) {
+      resumeOnReturn = true;
+      song.pause();
+    }
+    if (audioCtx && audioCtx.state === 'running') audioCtx.suspend().catch(() => {});
+  }
+  function comeBack() {
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+    if (resumeOnReturn && !userPaused) song.play().catch(() => {});
+    resumeOnReturn = false;
+  }
+  document.addEventListener('visibilitychange', () => (document.hidden ? goQuiet() : comeBack()));
+  window.addEventListener('pagehide', goQuiet);
+  // Back/forward cache: the page is restored as it was, without reloading
+  window.addEventListener('pageshow', (e) => { if (e.persisted && !document.hidden) comeBack(); });
 
   // Light buzz on phones that support it
   const buzz = () => navigator.vibrate && navigator.vibrate(60);
 
   // Notifications drop in one after the other
-  setTimeout(playDing, MESSENGER_AT - DING_AHEAD);
-
-  setTimeout(() => {
-    messenger.classList.add('is-in');
-    buzz();
+  function runIntro() {
+    setTimeout(playDing, MESSENGER_AT - DING_AHEAD);
 
     setTimeout(() => {
-      photos.classList.add('is-in');
+      messenger.classList.add('is-in');
       buzz();
-    }, PHOTOS_AFTER_MESSENGER);
-  }, MESSENGER_AT);
+
+      setTimeout(() => {
+        photos.classList.add('is-in');
+        buzz();
+      }, PHOTOS_AFTER_MESSENGER);
+    }, MESSENGER_AT);
+  }
 
   // ---------- Memories burst ----------
   // Put real photos in assets/memories as 1.jpg, 2.jpg, ... (up to MEMORY_COUNT).
@@ -187,22 +235,46 @@
     return anim.finished.then(() => card.remove());
   }
 
+  const skipBtn = document.getElementById('memories-skip');
+  const memoryTimers = [];
   let memoriesStarted = false;
+  let memoriesFinished = false;
+
   async function playMemories() {
     if (memoriesStarted) return;
     memoriesStarted = true;
+    skipBtn.hidden = false;
 
     const imgs = await Promise.all(memoryLoaded);
+    if (memoriesFinished) return; // skipped while the photos were still loading
     memoriesLayer.classList.add('is-playing');
 
     const flights = imgs.map((img, i) => new Promise((resolve) => {
-      setTimeout(() => flyPhoto(i, img).then(resolve), 350 + i * STAGGER_MS);
+      memoryTimers.push(setTimeout(() => flyPhoto(i, img).then(resolve), 350 + i * STAGGER_MS));
     }));
     await Promise.all(flights);
+    finishMemories();
+  }
 
-    // Next part can listen with: window.addEventListener('memories-done', ...)
+  // Once, whether the last photo flew past or they skipped.
+  // Next part listens with: window.addEventListener('memories-done', ...)
+  function finishMemories() {
+    if (memoriesFinished) return;
+    memoriesFinished = true;
+    skipBtn.hidden = true;
     window.dispatchEvent(new CustomEvent('memories-done'));
   }
+
+  // Skip: no more photos launch, the ones mid-flight fade where they are.
+  skipBtn.addEventListener('click', () => {
+    memoryTimers.forEach(clearTimeout);
+    memoriesLayer.querySelectorAll('.memory-photo').forEach((card) => {
+      card.getAnimations().forEach((a) => a.pause());
+      card.animate([{ opacity: getComputedStyle(card).opacity }, { opacity: 0 }], { duration: 250, fill: 'forwards' })
+        .finished.then(() => card.remove());
+    });
+    finishMemories();
+  });
 
   // Tapping the Photos notification starts the memories
   photos.addEventListener('click', () => {
@@ -221,7 +293,12 @@
   const steps = invite.querySelectorAll('[data-step]');
   const form = document.getElementById('rsvp-form');
   const nameInput = document.getElementById('rsvp-name');
+  const nameField = nameInput.closest('.name-field');
+  const options = document.getElementById('name-options');
+  const nameHint = document.getElementById('name-hint');
+  const sendBtn = document.getElementById('rsvp-send');
   const doneName = document.getElementById('rsvp-done-name');
+  const alreadyName = document.getElementById('rsvp-already-name');
 
   const readRsvp = () => {
     try { return JSON.parse(localStorage.getItem(RSVP_KEY)) || null; } catch { return null; }
@@ -246,21 +323,39 @@
     } catch {}
   };
 
+  // "Rondina, Wayne" -> "Wayne": how the page greets someone.
+  const firstName = (name) => {
+    const comma = name.indexOf(',');
+    return comma >= 0 ? name.slice(comma + 1).trim() || name : name;
+  };
+
+  // Resolves to 'ok', 'already' (that name already said yes), 'not-on-list', or
+  // 'queued' (no signal / server trouble: kept on the device and sent next time).
   function sendRsvp(data) {
     writePending(data);
+    const settle = () => {
+      // Only clear it if nothing newer was queued while this one was in flight.
+      const pending = readPending();
+      if (pending && pending.at === data.at) writePending(null);
+    };
     return fetch('api/rsvp', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ status: data.status, name: data.name || '' }),
       keepalive: true,
     })
-      .then((res) => {
-        if (!res.ok) throw new Error(`RSVP not saved (${res.status})`);
-        // Only clear it if nothing newer was queued while this one was in flight.
-        const pending = readPending();
-        if (pending && pending.at === data.at) writePending(null);
+      .then(async (res) => {
+        if (res.status >= 500) throw new Error(`RSVP not saved (${res.status})`);
+        // Saved, or refused for a reason that sending again won't change.
+        settle();
+        if (res.ok) return 'ok';
+        const body = await res.json().catch(() => ({}));
+        return body.code === 'already-responded' ? 'already' : 'not-on-list';
       })
-      .catch((err) => console.error('[rsvp]', err));
+      .catch((err) => {
+        console.error('[rsvp]', err);
+        return 'queued';
+      });
   }
 
   const unsent = readPending();
@@ -277,6 +372,7 @@
     setTimeout(() => {
       calendar.classList.add('is-in');
       buzz();
+      loadRoster();
     }, CALENDAR_AFTER_MEMORIES);
   });
 
@@ -376,7 +472,7 @@
     sheet.scrollTop = 0;
     const saved = readRsvp();
     if (saved && saved.status === 'accepted') {
-      doneName.textContent = saved.name;
+      doneName.textContent = firstName(saved.name);
       showStep('done');
     } else {
       showStep('ask');
@@ -401,12 +497,155 @@
   invite.addEventListener('click', (e) => { if (e.target === invite) closeInvite(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeInvite(); });
 
+  // ---------- Name picker: the batch list (Attendees tab) ----------
+  // Same behaviour as batch-dos-reunion's identity step: type, the best six matches
+  // cascade in below, tap (or arrow + Enter) to pick. Only a picked name can be sent.
+  // The search itself lives in names.js, shared with the server. It is pulled in on
+  // demand, so the intro, the song and the ding never depend on it loading.
+  let rankRoster = null;
+  let roster = null;      // { names: [...], going: Set }
+  let rosterLoad = null;
+  let rosterFailed = false;
+  let picked = null;
+  let results = [];
+  let cursor = 0;
+
+  function loadRoster() {
+    rosterLoad ??= Promise.all([
+      fetch('api/roster').then((res) => {
+        if (!res.ok) throw new Error(`Roster not loaded (${res.status})`);
+        return res.json();
+      }),
+      import('./names.js').then((m) => { rankRoster = m.rankRoster; }),
+    ])
+      .then(([data]) => {
+        roster = { names: data.names || [], going: new Set(data.going || []) };
+        rosterFailed = false;
+        renderPicker();
+      })
+      .catch((err) => {
+        console.error('[roster]', err);
+        rosterLoad = null; // let the next keystroke try again
+        rosterFailed = true;
+        renderPicker();
+      });
+    return rosterLoad;
+  }
+
+  function setHint(text, isError = false) {
+    nameHint.textContent = text;
+    nameHint.classList.toggle('is-error', isError);
+  }
+
+  function renderPicker() {
+    const query = nameInput.value.trim();
+    const next = roster && !picked ? rankRoster(roster.names, query) : [];
+
+    // Rebuild only when the matches change, so the cascade replays per new result set
+    // instead of on every keystroke.
+    if (next.join('|') !== results.join('|')) {
+      results = next;
+      cursor = 0;
+      options.replaceChildren(...results.map((name, i) => {
+        const li = document.createElement('li');
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'name-option';
+        btn.id = `name-option-${i}`;
+        btn.setAttribute('role', 'option');
+        btn.style.animationDelay = `${Math.min(i, 5) * 45}ms`;
+        btn.appendChild(el('span', '', name));
+        if (roster.going.has(name)) btn.appendChild(el('span', 'chip', 'Already going'));
+        btn.addEventListener('mouseenter', () => { cursor = i; markCursor(); });
+        btn.addEventListener('click', () => pick(name));
+        li.appendChild(btn);
+        return li;
+      }));
+    }
+    markCursor();
+    nameInput.setAttribute('aria-expanded', String(results.length > 0));
+
+    if (picked) setHint(`Tap Send to RSVP as ${picked}.`);
+    else if (!query) setHint('Pick your name from the batch list.');
+    else if (rosterFailed) setHint("Couldn't load the batch list. Check your signal and keep typing to retry.", true);
+    else if (!roster) setHint('Loading the batch list…');
+    else if (!results.length) setHint(`No match for “${query}”. Try your surname, or tell the committee.`, true);
+    else setHint('Tap your name below.');
+  }
+
+  function markCursor() {
+    options.querySelectorAll('.name-option').forEach((btn, i) => {
+      btn.classList.toggle('is-active', i === cursor);
+      btn.setAttribute('aria-selected', String(i === cursor));
+    });
+    if (results.length) nameInput.setAttribute('aria-activedescendant', `name-option-${cursor}`);
+    else nameInput.removeAttribute('aria-activedescendant');
+  }
+
+  function pick(name) {
+    if (roster && roster.going.has(name)) {
+      showAlready(name);
+      return;
+    }
+    picked = name;
+    nameInput.value = name;
+    nameField.classList.add('is-picked');
+    sendBtn.disabled = false;
+    nameInput.blur(); // drop the keyboard so Send is in view
+    renderPicker();
+  }
+
+  function unpick() {
+    picked = null;
+    nameField.classList.remove('is-picked');
+    if (sendBtn.dataset.state === 'idle') sendBtn.disabled = true;
+  }
+
+  nameInput.addEventListener('input', () => {
+    unpick();
+    if (!roster) loadRoster();
+    renderPicker();
+  });
+
+  nameInput.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown' && results.length) {
+      e.preventDefault();
+      cursor = Math.min(cursor + 1, results.length - 1);
+      markCursor();
+    } else if (e.key === 'ArrowUp' && results.length) {
+      e.preventDefault();
+      cursor = Math.max(cursor - 1, 0);
+      markCursor();
+    } else if (e.key === 'Enter' && !picked) {
+      e.preventDefault();
+      if (results[cursor]) pick(results[cursor]);
+    }
+  });
+
+  function showDone(name) {
+    doneName.textContent = firstName(name);
+    showStep('done');
+  }
+
+  function showAlready(name) {
+    alreadyName.textContent = firstName(name);
+    showStep('already');
+  }
+
   function askName() {
+    unpick();
+    nameInput.value = '';
     showStep('name');
+    loadRoster();
+    renderPicker();
     nameInput.focus();
   }
   document.getElementById('rsvp-accept').addEventListener('click', askName);
   document.getElementById('rsvp-change').addEventListener('click', askName);
+  document.getElementById('rsvp-not-me').addEventListener('click', () => {
+    askName();
+    setHint('Pick your own name. If someone else answered as you, tell the committee.');
+  });
 
   document.getElementById('rsvp-maybe').addEventListener('click', () => {
     const data = { status: 'maybe', at: new Date().toISOString() };
@@ -415,17 +654,127 @@
     showStep('maybe');
   });
 
-  form.addEventListener('submit', (e) => {
+  // ---------- Send button: idle -> sending -> sent ----------
+  const sendLabel = sendBtn.querySelector('.btn-label');
+  const calendarText = calendar.querySelector('.notif-text');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const MIN_SENDING_MS = 600; // a spinner that flashes for 80ms reads as a glitch
+  const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  function setSendState(state) {
+    sendBtn.dataset.state = state;
+    sendLabel.textContent = state === 'sending' ? 'Sending' : 'Send RSVP';
+    sendBtn.setAttribute('aria-label', state === 'sent' ? 'RSVP sent' : sendLabel.textContent);
+    if (state === 'idle') sendBtn.disabled = !picked;
+    else sendBtn.disabled = true;
+  }
+
+  // The lock-screen invite remembers the answer, like a real calendar would.
+  function markCalendarGoing() {
+    calendar.classList.add('is-going');
+    calendarText.textContent = "You're going ✓ · Sat, Dec 26";
+    calendar.setAttribute('aria-label', "Google Calendar: Batch Dos Reunion, Saturday December 26. You're going");
+  }
+
+  // A burst in the dress-code colours (blue, white, yellow), thrown up and out of the
+  // check and pulled back down, each piece tumbling at its own rate.
+  function confettiFrom(origin) {
+    const box = origin.getBoundingClientRect();
+    const cx = box.left + box.width / 2;
+    const cy = box.top + box.height / 2;
+    const phoneBox = phone.getBoundingClientRect();
+    const colours = DRESS_CODE.flatMap((group) => group.swatches);
+    // Clipped to the phone's screen, so on a laptop nothing falls past the frame
+    const layer = el('div', 'confetti-layer');
+    Object.assign(layer.style, {
+      left: `${phoneBox.left}px`,
+      top: `${phoneBox.top}px`,
+      width: `${phoneBox.width}px`,
+      height: `${phoneBox.height}px`,
+      borderRadius: getComputedStyle(phone).borderRadius,
+    });
+    document.body.appendChild(layer);
+
+    const pieces = Array.from({ length: 46 }, (_, i) => {
+      const piece = document.createElement('i');
+      const w = rand(5, 9);
+      piece.style.width = `${w}px`;
+      piece.style.height = `${i % 3 === 0 ? w : w * rand(1.6, 2.3)}px`;
+      if (i % 5 === 0) piece.style.borderRadius = '50%';
+      piece.style.background = colours[i % colours.length];
+      piece.style.left = `${cx - phoneBox.left}px`;
+      piece.style.top = `${cy - phoneBox.top}px`;
+      piece.style.boxShadow = 'inset 0 0 0 .5px rgba(0,0,0,.15)';
+      layer.appendChild(piece);
+
+      // A real arc: thrown up and out (slowing), a beat at the top, then falling
+      // (speeding up) — kept inside the phone so none of it lands off-screen.
+      const angle = rand(-Math.PI * 0.82, -Math.PI * 0.18);
+      const speed = rand(130, 270);
+      const room = Math.min(cx - phoneBox.left, phoneBox.right - cx) - 12;
+      const dx = Math.max(-room, Math.min(room, Math.cos(angle) * speed));
+      const dy = Math.sin(angle) * speed;
+      const endX = Math.max(-room, Math.min(room, dx * 1.25 + rand(-30, 30)));
+      const spin = rand(-720, 720);
+      const at = (x, y, deg, scale) => `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) rotate(${deg}deg) scale(${scale})`;
+      return piece.animate([
+        { transform: at(0, 0, 0, 0.4), opacity: 1, easing: 'cubic-bezier(.15,.75,.35,1)' },
+        { transform: at(dx, dy, spin * 0.4, 1), opacity: 1, offset: 0.34, easing: 'cubic-bezier(.55,0,.85,.45)' },
+        { transform: at(endX, dy + 300, spin, 0.85), opacity: 0 },
+      ], { duration: rand(1500, 2000), delay: rand(0, 90), easing: 'linear', fill: 'forwards' }).finished;
+    });
+
+    Promise.all(pieces).then(() => layer.remove());
+  }
+
+  // The whole send, start to finish. Resolves once the button has had its moment.
+  async function celebrate() {
+    if (reduceMotion) return;
+    setSendState('sent');
+    await pause(480);           // pill folds into the circle
+    confettiFrom(sendBtn);
+    if (navigator.vibrate) navigator.vibrate([18, 60, 28]);
+    await pause(900);           // check drawn, confetti in the air
+  }
+
+  if (readRsvp()?.status === 'accepted') markCalendarGoing();
+
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const name = nameInput.value.trim().replace(/\s+/g, ' ');
-    if (!name) { nameInput.focus(); return; }
+    if (!picked) {
+      setHint('Tap your name from the list first.', true);
+      nameInput.focus();
+      return;
+    }
+    const name = picked;
     nameInput.blur();
+    setSendState('sending');
+
     const data = { status: 'accepted', name, at: new Date().toISOString() };
+    const [outcome] = await Promise.all([sendRsvp(data), pause(MIN_SENDING_MS)]);
+
+    if (outcome === 'not-on-list') {
+      // The list changed under them (or an old page): start the pick over.
+      unpick();
+      nameInput.value = '';
+      setSendState('idle');
+      renderPicker();
+      setHint("That name isn't on the batch list any more. Pick again, or tell the committee.", true);
+      return;
+    }
+
+    // 'ok', 'already', or 'queued' (no signal: it goes through next time they open this)
     saveRsvp(data);
-    sendRsvp(data);
-    doneName.textContent = name;
-    showStep('done');
-    // Hook for saving RSVPs somewhere: window.addEventListener('rsvp-accepted', (e) => e.detail.name)
+    if (roster) roster.going.add(name);
+    markCalendarGoing();
+    if (outcome === 'already') {
+      setSendState('idle');
+      showAlready(name);
+    } else {
+      await celebrate();
+      showDone(name);
+      setSendState('idle'); // ready if they ever come back to this step
+    }
     window.dispatchEvent(new CustomEvent('rsvp-accepted', { detail: { name } }));
   });
 

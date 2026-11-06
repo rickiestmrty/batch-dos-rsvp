@@ -361,6 +361,26 @@ body {
 .notif--cta:active { transform: scale(.97) !important; }
 .notif--cta:focus-visible { box-shadow: 0 0 0 3px #ffe08a; }
 
+/* Before the first tap: the lock screen and a plain "Tap anywhere" in the middle.
+   The song card stays out until the tap, then rises in with its usual animation. */
+.phone.is-waiting .player { display: none; }
+.wake-prompt { display: none; }
+.phone.is-waiting .wake-prompt {
+  display: block;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 56%;
+  text-align: center;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: .2px;
+  color: rgba(255, 255, 255, .85);
+  pointer-events: none;
+  animation: fadeIn .6s .4s ease both;
+  opacity: 0;
+}
+
 /* Tapping finger hint */
 .tap-hint {
   position: absolute;
@@ -799,19 +819,90 @@ body {
 .btn--ghost:hover { background: #f4f8fe; }
 .btn--full { width: 100%; flex: none; }
 
-.rsvp-input {
-  height: calc(48 * var(--u));
-  border-radius: calc(12 * var(--u));
+/* Name picker — batch-dos-reunion's search field and result rows, in the invite's blue.
+   Type, and the batch list narrows below; tap your name to pick it. */
+.name-field {
+  display: flex;
+  align-items: center;
+  gap: calc(10 * var(--u));
+  height: calc(50 * var(--u));
+  padding: 0 calc(18 * var(--u));
   border: 1.5px solid #dadce0;
-  padding: 0 calc(14 * var(--u));
+  border-radius: 999px;
+  background: #fff;
+  transition: border-color .24s ease, box-shadow .24s ease;
+}
+.name-field:focus-within { border-color: var(--blue); box-shadow: 0 0 0 4px rgba(26,115,232,.12); }
+.name-field.is-picked { border-color: var(--blue); }
+.name-field-icon {
+  width: calc(18 * var(--u));
+  height: calc(18 * var(--u));
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  opacity: .35;
+}
+.name-field input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
   font: inherit;
   font-size: calc(16 * var(--u));
   color: var(--ink);
-  outline: none;
 }
-.rsvp-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(26,115,232,.15); }
+.name-field input::placeholder { color: inherit; opacity: .4; }
+/* Safari draws its own clear button inside a type=search */
+.name-field input::-webkit-search-decoration,
+.name-field input::-webkit-search-cancel-button { appearance: none; }
 /* On a real phone, never below 16px: iPhones zoom the page in on smaller inputs */
-@media (max-width: 500px) { .rsvp-input { font-size: max(16px, calc(16 * var(--u))); } }
+@media (max-width: 500px) { .name-field input { font-size: max(16px, calc(16 * var(--u))); } }
+
+.name-options { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.name-options:empty { display: none; }
+.name-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(8 * var(--u));
+  width: 100%;
+  padding: calc(10 * var(--u)) calc(16 * var(--u));
+  border: 0;
+  border-radius: calc(12 * var(--u));
+  background: transparent;
+  font: inherit;
+  font-size: calc(15 * var(--u));
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background-color .2s ease;
+  animation: row-in .3s cubic-bezier(.2,.7,.3,1) both;
+}
+.name-option.is-active { background: #f1f3f4; }
+.name-option[aria-selected="true"] { font-weight: 600; color: var(--blue); }
+.name-option > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@keyframes row-in { from { opacity: 0; transform: translate3d(0, 8px, 0); } }
+
+/* Small label beside a name that has already said yes — the reunion app's "Voted" chip */
+.chip {
+  flex: none;
+  border-radius: 999px;
+  background: #e6f4ea;
+  color: #137333;
+  padding: calc(2 * var(--u)) calc(8 * var(--u));
+  font-size: calc(11 * var(--u));
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.name-hint { font-size: calc(13 * var(--u)); color: var(--muted); text-align: center; }
+.name-hint.is-error { color: #c5221f; }
+
+.btn:disabled { opacity: .45; cursor: default; transform: none; }
+.btn--primary:disabled:hover { background: var(--blue); }
 
 .rsvp-done { align-items: center; text-align: center; gap: calc(4 * var(--u)); }
 .rsvp-check {
@@ -863,6 +954,34 @@ body {
   transition: opacity 0.5s ease;
 }
 .memories.is-playing::before { opacity: 1; }
+
+/* Skip the photos. Recessive like the reunion intro's Skip: there if you look for it. */
+.memories-skip {
+  position: absolute;
+  right: 18px;
+  bottom: max(36px, calc(env(safe-area-inset-bottom) + 22px));
+  z-index: 31; /* above the flying photos */
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .1);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  color: rgba(255, 255, 255, .65);
+  font: inherit;
+  font-size: 13px;
+  letter-spacing: .06em;
+  cursor: pointer;
+  transition: color .2s ease, background-color .2s ease;
+  animation: skip-in .4s ease .8s both;
+}
+.memories-skip[hidden] { display: none; }
+.memories-skip:hover,
+.memories-skip:focus-visible { color: #fff; background: rgba(255, 255, 255, .18); }
+.memories-skip:focus-visible { outline: 1px solid currentColor; outline-offset: -6px; }
+@keyframes skip-in { from { opacity: 0; transform: translateY(6px); } }
 
 .memory-photo {
   position: absolute;
@@ -938,6 +1057,76 @@ body {
   .stack { padding-bottom: 100px; }
   .lock-footer { height: 92px; }
 }
+
+/* Send RSVP: idle -> sending -> sent */
+.btn-send {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(9 * var(--u));
+  align-self: center;
+  overflow: hidden;
+  transition:
+    width .45s cubic-bezier(.6, 0, .2, 1),
+    border-radius .45s cubic-bezier(.6, 0, .2, 1),
+    background-color .3s ease,
+    opacity .2s;
+}
+.btn-spinner {
+  display: none;
+  width: calc(17 * var(--u));
+  height: calc(17 * var(--u));
+  border-radius: 50%;
+  border: 2.2px solid rgba(255, 255, 255, .35);
+  border-top-color: #fff;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.btn-check {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: calc(24 * var(--u));
+  height: calc(24 * var(--u));
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 22;
+  stroke-dashoffset: 22;
+  opacity: 0;
+}
+
+.btn-send[data-state="sending"],
+.btn-send[data-state="sent"] { pointer-events: none; }
+.btn-send[data-state="sending"]:disabled { opacity: 1; } /* still busy, not unavailable */
+.btn-send[data-state="sending"] .btn-spinner { display: block; }
+
+/* Sent: the pill folds into a green circle and the check is drawn on */
+.btn-send[data-state="sent"] {
+  width: calc(46 * var(--u));
+  padding: 0;
+  background: #1e8e3e;
+  opacity: 1;
+  box-shadow: 0 0 0 0 rgba(30, 142, 62, .45);
+  animation: sent-ring .9s .45s ease-out both;
+}
+.btn-send[data-state="sent"] .btn-label { opacity: 0; width: 0; overflow: hidden; }
+.btn-send[data-state="sent"] .btn-check {
+  opacity: 1;
+  transition: stroke-dashoffset .38s .4s cubic-bezier(.65, 0, .35, 1), opacity 0s .4s;
+  stroke-dashoffset: 0;
+}
+@keyframes sent-ring { to { box-shadow: 0 0 0 calc(16 * var(--u)) rgba(30, 142, 62, 0); } }
+
+/* Dress-code confetti, thrown from the check */
+.confetti-layer { position: fixed; pointer-events: none; z-index: 1000; overflow: hidden; }
+.confetti-layer i { position: absolute; display: block; border-radius: 2px; will-change: transform, opacity; }
+
+/* The lock-screen invite, once they've said yes */
+.notif--calendar.is-going .notif-text { color: #81c995; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; }

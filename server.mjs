@@ -4,7 +4,7 @@ import { createServer } from 'node:http'
 import { readFile } from 'node:fs/promises'
 import { extname, join, normalize, relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { recordRsvp } from './lib/rsvp.js'
+import { readRoster, recordRsvp } from './lib/rsvp.js'
 
 const ROOT = fileURLToPath(new URL('.', import.meta.url))
 const PORT = Number(process.env.PORT) || 5173
@@ -21,11 +21,12 @@ const TYPES = {
   '.svg': 'image/svg+xml',
   '.webp': 'image/webp',
   '.mp4': 'video/mp4',
-  '.webm': 'video/webm',
+  '.webm': 'audio/webm',
+  '.m4a': 'audio/mp4',
 }
 
 // Only the public site is served — never lib/, api/, .env files or node_modules.
-const PUBLIC = (path) => path === '/index.html' || /^\/(script\.js|styles\.css)$/.test(path) || path.startsWith('/assets/')
+const PUBLIC = (path) => path === '/index.html' || /^\/(script\.js|names\.js|styles\.css)$/.test(path) || path.startsWith('/assets/')
 
 const send = (res, status, body, type = 'application/json') => {
   res.writeHead(status, { 'content-type': type })
@@ -54,6 +55,16 @@ createServer(async (req, res) => {
   if (url.pathname === '/api/rsvp') {
     if (req.method !== 'POST') return send(res, 405, { ok: false, error: 'Method not allowed.' })
     return handleRsvp(req, res)
+  }
+
+  if (url.pathname === '/api/roster') {
+    if (req.method !== 'GET') return send(res, 405, { ok: false, error: 'Method not allowed.' })
+    try {
+      return send(res, 200, await readRoster())
+    } catch (err) {
+      console.error('[roster]', err)
+      return send(res, 502, { ok: false, error: 'Could not reach the spreadsheet.' })
+    }
   }
 
   let path
