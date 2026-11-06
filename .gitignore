@@ -1,0 +1,15 @@
+node_modules/
+.DS_Store
+
+# env files — service account credentials must never be committed
+.env
+.env*.local
+.env.production
+
+# Google Cloud service-account keys are named <project>-<hash>.json, so deny every
+# root-level .json and re-allow the ones the project needs.
+/*.json
+!/package.json
+!/vercel.json
+
+.vercel

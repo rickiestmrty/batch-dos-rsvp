@@ -230,6 +230,42 @@
     try { localStorage.setItem(RSVP_KEY, JSON.stringify(data)); } catch {}
   };
 
+  // ---------- Send RSVPs to the reunion workbook ----------
+  // The answer is queued on the device first, then posted to /api/rsvp, which appends
+  // a row to the RSVP tab. If the post fails (bad signal, server hiccup) the queued
+  // answer is sent again the next time the page opens.
+  const PENDING_KEY = 'batchDosRsvpPending';
+
+  const readPending = () => {
+    try { return JSON.parse(localStorage.getItem(PENDING_KEY)) || null; } catch { return null; }
+  };
+  const writePending = (data) => {
+    try {
+      if (data) localStorage.setItem(PENDING_KEY, JSON.stringify(data));
+      else localStorage.removeItem(PENDING_KEY);
+    } catch {}
+  };
+
+  function sendRsvp(data) {
+    writePending(data);
+    return fetch('api/rsvp', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ status: data.status, name: data.name || '' }),
+      keepalive: true,
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error(`RSVP not saved (${res.status})`);
+        // Only clear it if nothing newer was queued while this one was in flight.
+        const pending = readPending();
+        if (pending && pending.at === data.at) writePending(null);
+      })
+      .catch((err) => console.error('[rsvp]', err));
+  }
+
+  const unsent = readPending();
+  if (unsent) sendRsvp(unsent);
+
   function showStep(name) {
     steps.forEach((el) => { el.hidden = el.dataset.step !== name; });
   }
@@ -244,7 +280,100 @@
     }, CALENDAR_AFTER_MEMORIES);
   });
 
+  // ---------- Full details: the sched on notebook paper + the dress code ----------
+  // The program, from the reunion workbook's Program tab. Edit wording or times here.
+  // `kind`: 'games' gets a doodled star, 'night' gets a highlighter swipe.
+  const PROGRAM = [
+    { start: '8:00am', end: '10:00am', title: 'Registration & Arrival', note: 'arrival, chika-chika, pangumusta' },
+    { start: '10:00am', title: 'Welcome Address', note: 'by our very own Apolinario Cabatingan' },
+    { start: '10:15am', title: 'Asa Na Ta?', note: 'everyone shares what the last nine years looked like — work, family, the wins and the hard parts' },
+    { start: '12:00pm', title: 'Lunch' },
+    { start: '1:00pm', title: 'Game No. 1', kind: 'games' },
+    { start: '1:45pm', title: 'Video Presentation', note: 'photos from back then, put together by the committee' },
+    { start: '2:15pm', title: 'Game No. 2', kind: 'games' },
+    { start: '3:00pm', title: 'Intermission', note: 'Jola Monteclar — the MNSTS nightingale' },
+    { start: '3:10pm', title: 'Game No. 3', kind: 'games' },
+    { start: '3:45pm', title: 'Intermission' },
+    { start: '3:55pm', title: 'Game No. 4', kind: 'games' },
+    { start: '4:30pm', title: 'Game No. 5', kind: 'games' },
+    { start: '5:00pm', title: 'Dinner' },
+    { start: '6:00pm', end: 'till late', title: 'Chill & Drinks', kind: 'night' },
+  ];
+
+  // Any shade of blue, white, or yellow — grouped so the three colours read at a glance.
+  const DRESS_CODE = [
+    { name: 'blue', swatches: ['#0A1680', '#1A1A55', '#224668', '#104B6C', '#93B2F8'] },
+    { name: 'white', swatches: ['#FCFDFF', '#EFF8FF', '#E3DED8', '#D5BFA7'] },
+    { name: 'yellow', swatches: ['#F5EFC1', '#FBEDB0', '#FEE14E', '#F7B94C', '#C9930A'] },
+  ];
+
+  const sheet = invite.querySelector('.sheet');
+  const detailsToggle = document.getElementById('details-toggle');
+  const detailsLabel = detailsToggle.querySelector('.strip-title');
+  const detailsSub = detailsToggle.querySelector('.strip-sub');
+  const more = document.getElementById('invite-more');
+
+  const el = (tag, className, text) => {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text) node.textContent = text;
+    return node;
+  };
+
+  // A pen-drawn star for the games: one stroke, slightly uneven, like a margin doodle.
+  const STAR_SVG =
+    '<svg class="nb-star" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.6 6.1 6.4.4-4.9 4.2 1.6 6.4L12 16.4l-5.6 3.6 1.5-6.5-4.8-4.1 6.5-.5z" /></svg>';
+
+  const program = document.getElementById('program');
+  PROGRAM.forEach((item) => {
+    const li = el('li', item.kind ? `is-${item.kind}` : '');
+    li.appendChild(el('time', 'nb-time', item.start));
+
+    const what = el('div', 'nb-what');
+    const title = el('span', 'nb-title', item.title);
+    what.appendChild(title);
+    if (item.kind === 'games') title.insertAdjacentHTML('afterend', STAR_SVG);
+    if (item.end) what.appendChild(el('span', 'nb-end', item.end === 'till late' ? ' — till late!' : ` (til ${item.end})`));
+    if (item.note) what.appendChild(el('p', 'nb-note', item.note));
+
+    li.appendChild(what);
+    program.appendChild(li);
+  });
+
+  const dressGroups = document.getElementById('swatches');
+  DRESS_CODE.forEach(({ name, swatches }) => {
+    const row = el('div', 'sticky-row');
+    row.appendChild(el('span', 'sticky-name', `${name}:`));
+    const dots = el('span', 'sticky-dots');
+    swatches.forEach((hex, i) => {
+      const s = el('span');
+      s.style.background = hex;
+      // Each dot sits a little differently, like it was coloured in by hand
+      s.style.transform = `rotate(${(i * 37) % 50 - 25}deg)`;
+      dots.appendChild(s);
+    });
+    row.appendChild(dots);
+    dressGroups.appendChild(row);
+  });
+
+  function setDetails(open, { scroll = true } = {}) {
+    more.hidden = !open;
+    sheet.classList.toggle('is-expanded', open);
+    detailsToggle.setAttribute('aria-expanded', String(open));
+    detailsLabel.textContent = open ? 'Show less' : 'See full details';
+    detailsSub.textContent = open ? 'fold the sched back up' : 'the sched + dress code';
+    if (open && scroll) {
+      // Wait a frame so the sheet has grown to its scrolling height first
+      requestAnimationFrame(() => {
+        sheet.scrollTo({ top: Math.max(0, detailsToggle.offsetTop - 12), behavior: 'smooth' });
+      });
+    }
+  }
+  detailsToggle.addEventListener('click', () => setDetails(more.hidden));
+
   function openInvite() {
+    setDetails(false, { scroll: false });
+    sheet.scrollTop = 0;
     const saved = readRsvp();
     if (saved && saved.status === 'accepted') {
       doneName.textContent = saved.name;
@@ -280,7 +409,9 @@
   document.getElementById('rsvp-change').addEventListener('click', askName);
 
   document.getElementById('rsvp-maybe').addEventListener('click', () => {
-    saveRsvp({ status: 'maybe', at: new Date().toISOString() });
+    const data = { status: 'maybe', at: new Date().toISOString() };
+    saveRsvp(data);
+    sendRsvp(data);
     showStep('maybe');
   });
 
@@ -289,7 +420,9 @@
     const name = nameInput.value.trim().replace(/\s+/g, ' ');
     if (!name) { nameInput.focus(); return; }
     nameInput.blur();
-    saveRsvp({ status: 'accepted', name, at: new Date().toISOString() });
+    const data = { status: 'accepted', name, at: new Date().toISOString() };
+    saveRsvp(data);
+    sendRsvp(data);
     doneName.textContent = name;
     showStep('done');
     // Hook for saving RSVPs somewhere: window.addEventListener('rsvp-accepted', (e) => e.detail.name)

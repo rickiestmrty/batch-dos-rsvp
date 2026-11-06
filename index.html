@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#0b0f2a" />
   <title>Batch Dos Reunion</title>
+  <!-- Kalam: ballpen handwriting for the notebook sched -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&display=swap" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -172,7 +176,48 @@
               <a class="ig-link" href="https://www.instagram.com/bakhawanbeachhome/" target="_blank" rel="noopener">Instagram: @bakhawanbeachhome ↗</a>
             </span>
           </li>
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16Zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7Z"/></svg>
+            <span>8:00am – till late<br/>
+              <span class="event-sub">Arrival, games, dinner &amp; chill drinks</span>
+            </span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 0 0 0 18c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8Zm-5.5 9a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm3-4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm3 4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Z"/></svg>
+            <span>Dress code<br/>
+              <span class="event-sub dress-mini">
+                <span class="dot" style="background:#0A1680"></span><span class="dot" style="background:#FCFDFF"></span><span class="dot" style="background:#FEE14E"></span>
+                Blue, white, or yellow
+              </span>
+            </span>
+          </li>
         </ul>
+
+        <!-- A torn-off strip of the notebook page below: tap to open the full sched -->
+        <button class="paper-strip" id="details-toggle" type="button" aria-expanded="false" aria-controls="invite-more">
+          <span class="strip-text">
+            <span class="strip-title">See full details</span>
+            <span class="strip-sub">the sched + dress code</span>
+          </span>
+          <svg class="strip-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9.5c2.4 2.1 4.6 4.3 7 6.6 2.3-2.4 4.6-4.6 7-6.8"/></svg>
+        </button>
+
+        <!-- Full details: the day's sched written on notebook paper, dress code on a sticky note -->
+        <div class="invite-more" id="invite-more" hidden>
+          <section class="notebook" aria-labelledby="nb-heading">
+            <h3 class="nb-heading" id="nb-heading">Batch Dos — Sched</h3>
+            <p class="nb-place"><span>@ Bakhawan Beach Home</span><span class="nb-date">Sat, Dec 26</span></p>
+            <ol class="nb-list" id="program"></ol>
+
+            <aside class="sticky" aria-labelledby="sticky-heading">
+              <span class="sticky-tape" aria-hidden="true"></span>
+              <h3 class="sticky-heading" id="sticky-heading">Dress code!!</h3>
+              <p class="sticky-line">any shade of blue, white, or yellow</p>
+              <div class="sticky-rows" id="swatches"></div>
+              <p class="sticky-foot">pick whichever you already own :)</p>
+            </aside>
+          </section>
+        </div>
 
         <!-- Step 1: answer -->
         <div class="rsvp" data-step="ask">
