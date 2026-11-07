@@ -9,7 +9,9 @@
   "scripts": {
     "dev": "node --env-file=.env.local server.mjs",
     "test": "node --test 'lib/**/*.test.js'",
-    "format-rsvp": "node --env-file=.env.local scripts/format-rsvp.mjs"
+    "format-rsvp": "node --env-file=.env.local scripts/format-rsvp.mjs",
+    "reset-rsvp": "node --env-file=.env.local scripts/reset-rsvp.mjs",
+    "build-memories": "sh scripts/build-memories.sh"
   },
   "dependencies": {
     "google-auth-library": "^11.0.2"

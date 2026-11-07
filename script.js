@@ -159,12 +159,17 @@
   }
 
   // ---------- Memories burst ----------
-  // Put real photos in assets/memories as 1.jpg, 2.jpg, ... (up to MEMORY_COUNT).
-  // Any number that's missing shows a placeholder card instead.
-  const MEMORY_COUNT = 12;
+  // Photos live in assets/memories as 01.jpg, 02.jpg, ... in date order, built from
+  // assets/photos by `pnpm build-memories`. Any number that's missing shows a placeholder.
+  // The last one is the finale: it comes out slower, lands bigger and is held on screen.
+  const MEMORY_COUNT = 16;
   const MEMORY_EXT = 'jpg';
   const FLIGHT_MS = 1900;   // how long one photo takes from the thumbnail to flying past
   const STAGGER_MS = 650;   // gap between photos coming out
+  const FINALE_GAP_MS = 700;   // extra beat before the last photo, so it doesn't arrive in the crowd
+  const FINALE_IN_MS = 1300;   // thumbnail -> center
+  const FINALE_HOLD_MS = 3400; // on screen, slowly pushing in
+  const FINALE_OUT_MS = 1000;  // dissolves toward you
 
   const memoriesLayer = document.getElementById('memories');
   const thumb = photos.querySelector('.memory-thumb');
@@ -174,7 +179,10 @@
   ];
 
   // Preload so photos are ready by the time someone taps
-  const memorySrcs = Array.from({ length: MEMORY_COUNT }, (_, i) => `assets/memories/${i + 1}.${MEMORY_EXT}`);
+  const memorySrcs = Array.from(
+    { length: MEMORY_COUNT },
+    (_, i) => `assets/memories/${String(i + 1).padStart(2, '0')}.${MEMORY_EXT}`,
+  );
   const memoryLoaded = memorySrcs.map((src) => new Promise((resolve) => {
     const img = new Image();
     img.onload = () => resolve(img);
@@ -200,16 +208,28 @@
 
   const rand = (min, max) => min + Math.random() * (max - min);
 
-  function flyPhoto(i, img) {
+  // The card takes the photo's own shape, so nobody at the edge of a group shot gets cropped.
+  function cardSize(img, maxW, maxH) {
+    const ratio = img ? img.naturalWidth / img.naturalHeight : 4 / 5;
+    const W = Math.min(maxW, maxH * ratio);
+    return { W, H: W / ratio };
+  }
+
+  // Sitting on top of the 2013 thumbnail, scaled down to its size
+  function fromThumb(W, H) {
     const phoneBox = phone.getBoundingClientRect();
     const thumbBox = thumb.getBoundingClientRect();
-    const W = phoneBox.width * 0.72;
-    const H = W * 5 / 4;
+    return {
+      x: thumbBox.left - phoneBox.left + thumbBox.width / 2 - W / 2,
+      y: thumbBox.top - phoneBox.top + thumbBox.height / 2 - H / 2,
+      scale: thumbBox.width / Math.max(W, H),
+    };
+  }
 
-    // Start: sitting on top of the 2013 thumbnail
-    const sx = thumbBox.left - phoneBox.left + thumbBox.width / 2 - W / 2;
-    const sy = thumbBox.top - phoneBox.top + thumbBox.height / 2 - H / 2;
-    const startScale = thumbBox.width / W;
+  function flyPhoto(i, img) {
+    const phoneBox = phone.getBoundingClientRect();
+    const { W, H } = cardSize(img, phoneBox.width * 0.8, phoneBox.height * 0.5);
+    const s = fromThumb(W, H);
 
     // Middle: near the center of the screen, big enough to see clearly
     const mx = phoneBox.width / 2 - W / 2 + rand(-18, 18);
@@ -222,16 +242,53 @@
 
     const card = makePhotoCard(i, img);
     card.style.width = `${W}px`;
+    card.style.height = `${H}px`;
     card.style.zIndex = String(1000 - i); // newer photos come from behind
     memoriesLayer.appendChild(card);
 
     const anim = card.animate([
-      { transform: `translate(${sx}px, ${sy}px) scale(${startScale}) rotate(0deg)`, opacity: 0.6, offset: 0, easing: 'cubic-bezier(.2,.7,.3,1)' },
+      { transform: `translate(${s.x}px, ${s.y}px) scale(${s.scale}) rotate(0deg)`, opacity: 0.6, offset: 0, easing: 'cubic-bezier(.2,.7,.3,1)' },
       { transform: `translate(${mx}px, ${my}px) scale(1) rotate(${rot}deg)`, opacity: 1, offset: 0.38, easing: 'linear' },
       { transform: `translate(${mx}px, ${my}px) scale(1.12) rotate(${rot}deg)`, opacity: 1, offset: 0.68, easing: 'cubic-bezier(.5,0,.9,.4)' },
       { transform: `translate(${ex}px, ${ey}px) scale(2.8) rotate(${rot * 1.6}deg)`, opacity: 0, offset: 1 },
     ], { duration: FLIGHT_MS, fill: 'forwards' });
 
+    return anim.finished.then(() => card.remove());
+  }
+
+  // The last photo: rises out of the thumbnail on top of everything, settles dead center,
+  // bigger and in a thicker frame, a light sweeps across it, it slowly pushes in while it's
+  // held, then it dissolves toward you instead of flying off.
+  function flyFinale(i, img) {
+    const phoneBox = phone.getBoundingClientRect();
+    const { W, H } = cardSize(img, phoneBox.width * 0.92, phoneBox.height * 0.62);
+    const s = fromThumb(W, H);
+    const mx = phoneBox.width / 2 - W / 2;
+    const my = phoneBox.height * 0.45 - H / 2;
+
+    const card = makePhotoCard(i, img);
+    card.classList.add('memory-photo--finale');
+    card.style.width = `${W}px`;
+    card.style.height = `${H}px`;
+    card.style.zIndex = '2000';
+    memoriesLayer.appendChild(card);
+    memoriesLayer.classList.add('is-finale');
+
+    const total = FINALE_IN_MS + FINALE_HOLD_MS + FINALE_OUT_MS;
+    const landed = FINALE_IN_MS / total;
+    const held = (FINALE_IN_MS + FINALE_HOLD_MS) / total;
+    // The sheen in CSS starts as it lands.
+    card.style.setProperty('--finale-in', `${FINALE_IN_MS}ms`);
+
+    const anim = card.animate([
+      { transform: `translate(${s.x}px, ${s.y}px) scale(${s.scale}) rotate(-6deg)`, opacity: 0.6, offset: 0, easing: 'cubic-bezier(.16,.84,.28,1)' },
+      { transform: `translate(${mx}px, ${my}px) scale(1) rotate(0deg)`, opacity: 1, offset: landed, easing: 'linear' },
+      { transform: `translate(${mx}px, ${my}px) scale(1.05) rotate(0deg)`, opacity: 1, offset: held, easing: 'cubic-bezier(.4,0,.7,.2)' },
+      { transform: `translate(${mx}px, ${my - 10}px) scale(1.35) rotate(0deg)`, opacity: 0, offset: 1 },
+    ], { duration: total, fill: 'forwards' });
+
+    // The warm glow behind it goes as the photo starts to leave
+    memoryTimers.push(setTimeout(() => memoriesLayer.classList.remove('is-finale'), FINALE_IN_MS + FINALE_HOLD_MS));
     return anim.finished.then(() => card.remove());
   }
 
@@ -249,8 +306,11 @@
     if (memoriesFinished) return; // skipped while the photos were still loading
     memoriesLayer.classList.add('is-playing');
 
+    const last = imgs.length - 1;
     const flights = imgs.map((img, i) => new Promise((resolve) => {
-      memoryTimers.push(setTimeout(() => flyPhoto(i, img).then(resolve), 350 + i * STAGGER_MS));
+      const isFinale = i === last;
+      const startAt = 350 + i * STAGGER_MS + (isFinale ? FINALE_GAP_MS : 0);
+      memoryTimers.push(setTimeout(() => (isFinale ? flyFinale(i, img) : flyPhoto(i, img)).then(resolve), startAt));
     }));
     await Promise.all(flights);
     finishMemories();
@@ -268,6 +328,7 @@
   // Skip: no more photos launch, the ones mid-flight fade where they are.
   skipBtn.addEventListener('click', () => {
     memoryTimers.forEach(clearTimeout);
+    memoriesLayer.classList.remove('is-finale');
     memoriesLayer.querySelectorAll('.memory-photo').forEach((card) => {
       card.getAnimations().forEach((a) => a.pause());
       card.animate([{ opacity: getComputedStyle(card).opacity }, { opacity: 0 }], { duration: 250, fill: 'forwards' })

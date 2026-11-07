@@ -987,7 +987,7 @@ body {
   position: absolute;
   left: 0;
   top: 0;
-  aspect-ratio: 4 / 5;
+  /* width and height are set per photo in script.js, from the photo's own shape */
   border-radius: 14px;
   overflow: hidden;
   border: 3px solid rgba(255, 255, 255, 0.92);
@@ -1002,6 +1002,37 @@ body {
   object-fit: cover;
   display: block;
 }
+/* The last photo: the batch's moving-up picture, held on screen */
+.memories::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 45%, rgba(255, 214, 140, .32), rgba(255, 180, 90, .08) 45%, transparent 70%);
+  opacity: 0;
+  transition: opacity 1.2s ease;
+}
+.memories.is-finale::after { opacity: 1; }
+.memory-photo--finale {
+  border-width: 6px;
+  border-color: #fff;
+  border-radius: 10px;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, .35),
+    0 0 60px rgba(255, 210, 130, .45),
+    0 30px 70px rgba(0, 0, 0, .6);
+}
+/* A light catches it once, right as it lands */
+.memory-photo--finale::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, .55) 50%, transparent 65%);
+  transform: translateX(-120%);
+  animation: finale-sheen 1.4s cubic-bezier(.4, 0, .2, 1) var(--finale-in, 1.3s) forwards;
+  pointer-events: none;
+}
+@keyframes finale-sheen { to { transform: translateX(120%); } }
+
 /* Shown until real photos are added */
 .memory-placeholder {
   width: 100%;
