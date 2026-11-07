@@ -16,3 +16,4 @@ node_modules/
 
 # Original photos; the site ships the resized copies in assets/memories (pnpm build-memories)
 assets/photos/
+assets/purita/

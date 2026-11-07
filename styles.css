@@ -573,14 +573,14 @@ body {
   flex-shrink: 0;
   margin-top: calc(1 * var(--u));
 }
-.ig-link {
+.venue-link {
   color: var(--blue);
   font-size: calc(13.5 * var(--u));
   font-weight: 500;
   text-decoration: none;
   white-space: nowrap;
 }
-.ig-link:hover { text-decoration: underline; }
+.venue-link:hover { text-decoration: underline; }
 
 .event-sub { font-size: calc(13.5 * var(--u)); color: var(--muted); }
 .dress-mini { display: inline-flex; align-items: center; gap: calc(4 * var(--u)); }
@@ -591,6 +591,109 @@ body {
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .14);
 }
 .dress-mini .dot:last-of-type { margin-right: calc(4 * var(--u)); }
+
+/* ---------- Venue peek: three snapshots of Purita Farms taped into the invite ----------
+   Fanned like they were stuck in by hand: the pool on top in the middle, the aerial
+   and the veranda tucked behind it. Tap one and it lifts out to fill the screen. */
+.venue-peek {
+  position: relative;
+  height: calc(146 * var(--u));
+  margin: calc(34 * var(--u)) calc(4 * var(--u)) 0;
+}
+.polaroid {
+  --tilt: 0deg;
+  position: absolute;
+  top: calc(8 * var(--u));
+  width: 42%;
+  padding: calc(6 * var(--u)) calc(6 * var(--u)) 0;
+  border: 0;
+  border-radius: calc(2 * var(--u));
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .06), 0 10px 18px -8px rgba(0, 0, 0, .35);
+  transform: rotate(var(--tilt));
+  cursor: zoom-in;
+  font: inherit;
+  transition: transform .2s ease, box-shadow .2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.venue-peek .polaroid:nth-of-type(1) { left: 0; top: calc(14 * var(--u)); }
+.venue-peek .polaroid:nth-of-type(2) { right: 0; top: calc(18 * var(--u)); }
+.venue-peek .polaroid:nth-of-type(3) { left: 29%; z-index: 1; }
+/* The middle one covers the inner edges, so the side captions sit toward the outside */
+.venue-peek .polaroid:nth-of-type(1) .polaroid-caption { text-align: left; padding-left: calc(4 * var(--u)); }
+.venue-peek .polaroid:nth-of-type(2) .polaroid-caption { text-align: right; padding-right: calc(4 * var(--u)); }
+.venue-peek .polaroid:hover,
+.venue-peek .polaroid:focus-visible {
+  transform: rotate(var(--tilt)) translateY(calc(-4 * var(--u))) scale(1.03);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .06), 0 16px 24px -10px rgba(0, 0, 0, .4);
+  z-index: 2;
+}
+.polaroid:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+/* A strip of tape holding each one down */
+.polaroid::before {
+  content: "";
+  position: absolute;
+  top: calc(-7 * var(--u));
+  left: 50%;
+  width: calc(44 * var(--u));
+  height: calc(14 * var(--u));
+  margin-left: calc(-22 * var(--u));
+  background: rgba(255, 253, 235, .78);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .05);
+  transform: rotate(calc(var(--tilt) * -1.5));
+}
+.polaroid img {
+  display: block;
+  width: 100%;
+  height: auto; /* the width/height attributes only reserve the shape; the crop is 4:3 */
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: #e9ece6;
+}
+.polaroid-caption {
+  display: block;
+  font-family: 'Kalam', 'Comic Sans MS', cursive;
+  font-size: calc(14 * var(--u));
+  line-height: calc(26 * var(--u));
+  color: #1f2c8a;
+  text-align: center;
+  white-space: nowrap;
+}
+.venue-hint {
+  position: absolute;
+  left: calc(6 * var(--u));
+  top: calc(-24 * var(--u));
+  font-family: 'Kalam', 'Comic Sans MS', cursive;
+  font-size: calc(13 * var(--u));
+  color: #6f7277;
+  transform: rotate(-3deg);
+}
+
+/* Lifted out: one photo, big, over a dimmed invite. Tap anywhere to put it back. */
+.venue-zoom {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  padding: calc(18 * var(--u));
+  background: rgba(10, 12, 30, .74);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  cursor: zoom-out;
+  animation: appear .3s ease both;
+}
+.venue-zoom.is-closing { animation: fadeOut .3s ease both; }
+.polaroid--big {
+  position: static;
+  width: 100%;
+  padding: calc(10 * var(--u)) calc(10 * var(--u)) 0;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, .55);
+  cursor: inherit;
+}
+.polaroid--big::before { width: calc(80 * var(--u)); height: calc(22 * var(--u)); margin-left: calc(-40 * var(--u)); top: calc(-11 * var(--u)); }
+.polaroid--big img { aspect-ratio: auto; }
+.polaroid--big .polaroid-caption { font-size: calc(20 * var(--u)); line-height: calc(46 * var(--u)); }
 
 /* ---------- Notebook: the sched, written in ballpen on ruled paper ----------
    Every line of writing sits on a ruled line: all text inside uses line-height

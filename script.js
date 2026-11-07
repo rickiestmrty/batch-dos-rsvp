@@ -448,7 +448,6 @@
     { start: '1:00pm', title: 'Game No. 1', kind: 'games' },
     { start: '1:45pm', title: 'Video Presentation', note: 'photos from back then, put together by the committee' },
     { start: '2:15pm', title: 'Game No. 2', kind: 'games' },
-    { start: '3:00pm', title: 'Intermission', note: 'Jola Monteclar — the MNSTS nightingale' },
     { start: '3:10pm', title: 'Game No. 3', kind: 'games' },
     { start: '3:45pm', title: 'Intermission' },
     { start: '3:55pm', title: 'Game No. 4', kind: 'games' },
@@ -557,6 +556,77 @@
   inviteClose.addEventListener('click', closeInvite);
   invite.addEventListener('click', (e) => { if (e.target === invite) closeInvite(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeInvite(); });
+
+  // ---------- Venue peek: tap a snapshot and it lifts out, big ----------
+  // The small polaroid hides while a big copy grows out of its exact spot (and tilt),
+  // then shrinks back into it on close, so it reads as the same photo picked up.
+  const venuePeek = document.getElementById('venue-peek');
+  let venueZoom = null;
+
+  function liftFrom(card, big) {
+    const from = card.getBoundingClientRect();
+    const to = big.getBoundingClientRect();
+    const dx = from.left + from.width / 2 - (to.left + to.width / 2);
+    const dy = from.top + from.height / 2 - (to.top + to.height / 2);
+    const tilt = getComputedStyle(card).getPropertyValue('--tilt').trim() || '0deg';
+    return `translate(${dx}px, ${dy}px) scale(${from.width / to.width}) rotate(${tilt})`;
+  }
+
+  function openVenuePhoto(card) {
+    if (venueZoom) return;
+    const caption = card.querySelector('.polaroid-caption').textContent;
+    const layer = el('div', 'venue-zoom');
+    layer.setAttribute('role', 'dialog');
+    layer.setAttribute('aria-label', `${caption} (tap to close)`);
+    layer.tabIndex = -1;
+
+    const big = el('figure', 'polaroid polaroid--big');
+    big.style.setProperty('--tilt', '-1deg');
+    const img = el('img');
+    img.src = card.dataset.src;
+    img.alt = card.getAttribute('aria-label').replace(/^See it bigger: /, '');
+    big.append(img, el('figcaption', 'polaroid-caption', caption));
+    layer.appendChild(big);
+    invite.appendChild(layer);
+
+    venueZoom = { card, layer, big };
+    big.animate(
+      [{ transform: liftFrom(card, big) }, { transform: 'rotate(-1deg)' }],
+      { duration: 420, easing: 'cubic-bezier(.2,.9,.3,1)' },
+    );
+    card.style.visibility = 'hidden';
+    layer.focus({ preventScroll: true });
+  }
+
+  function closeVenuePhoto() {
+    if (!venueZoom || venueZoom.layer.classList.contains('is-closing')) return;
+    const { card, layer, big } = venueZoom;
+    layer.classList.add('is-closing');
+    big.animate(
+      [{ transform: 'rotate(-1deg)' }, { transform: liftFrom(card, big) }],
+      { duration: 300, easing: 'cubic-bezier(.4,0,.6,1)', fill: 'forwards' },
+    ).finished.then(() => {
+      card.style.visibility = '';
+      layer.remove();
+      venueZoom = null;
+      card.focus({ preventScroll: true });
+    });
+  }
+
+  venuePeek.addEventListener('click', (e) => {
+    const card = e.target.closest('.polaroid');
+    if (card) openVenuePhoto(card);
+  });
+  invite.addEventListener('click', (e) => {
+    if (venueZoom && venueZoom.layer.contains(e.target)) closeVenuePhoto();
+  });
+  // Escape puts the photo back first; the next Escape closes the invite as before.
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && venueZoom) {
+      e.stopImmediatePropagation();
+      closeVenuePhoto();
+    }
+  }, true);
 
   // ---------- Name picker: the batch list (Attendees tab) ----------
   // Same behaviour as batch-dos-reunion's identity step: type, the best six matches

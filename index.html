@@ -5,20 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#0b0f2a" />
   <title>Batch Dos Reunion</title>
-  <meta name="description" content="You're invited: Batch Dos Reunion, Saturday, December 26 at Bakhawan Beach Home. Tap to RSVP." />
+  <meta name="description" content="You're invited: Batch Dos Reunion, Saturday, December 26 at Purita Farms. Tap to RSVP." />
 
   <!-- Link preview when it's shared into the group chat. Same cover as batch-dos-reunion. -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://batch-dos-rsvp.vercel.app/" />
   <meta property="og:title" content="Asa na' ta? · Batch Dos Reunion" />
-  <meta property="og:description" content="Sat, Dec 26 · Bakhawan Beach Home. Tap to RSVP." />
+  <meta property="og:description" content="Sat, Dec 26 · Purita Farms. Tap to RSVP." />
   <meta property="og:image" content="https://batch-dos-rsvp.vercel.app/assets/og.jpg" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="675" />
   <meta property="og:image:alt" content="Asa na' ta? — nine years later" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Asa na' ta? · Batch Dos Reunion" />
-  <meta name="twitter:description" content="Sat, Dec 26 · Bakhawan Beach Home. Tap to RSVP." />
+  <meta name="twitter:description" content="Sat, Dec 26 · Purita Farms. Tap to RSVP." />
   <meta name="twitter:image" content="https://batch-dos-rsvp.vercel.app/assets/og.jpg" />
 
   <!-- Kalam: ballpen handwriting for the notebook sched. Loaded without blocking the
@@ -59,10 +59,10 @@
       <article class="player" id="player" aria-label="Now playing on SpotiBai">
         <div class="player-top">
           <div class="album-art" aria-hidden="true">
-            <span class="album-art-text">PARTY<br/>IN<br/>BAKHAWAN</span>
+            <span class="album-art-text">PARTY<br/>IN<br/>PURITA<br/>FARMS</span>
           </div>
           <div class="track">
-            <p class="track-title">Party in Bakhawan</p>
+            <p class="track-title">Party in Purita Farms</p>
             <p class="track-artist">Miley Cyrus</p>
           </div>
           <div class="spotibai" title="SpotiBai">
@@ -193,8 +193,8 @@
           </li>
           <li>
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z"/></svg>
-            <span>Bakhawan Beach Home<br/>
-              <a class="ig-link" href="https://www.instagram.com/bakhawanbeachhome/" target="_blank" rel="noopener">Instagram: @bakhawanbeachhome ↗</a>
+            <span>Purita Farms<br/>
+              <a class="venue-link" href="https://www.facebook.com/PuritaFarms" target="_blank" rel="noopener">Facebook: Purita Farms ↗</a>
             </span>
           </li>
           <li>
@@ -214,6 +214,23 @@
           </li>
         </ul>
 
+        <!-- A peek at the venue: three snapshots taped into the invite. Tap one to see it big. -->
+        <div class="venue-peek" id="venue-peek">
+          <button class="polaroid" type="button" style="--tilt: -6deg" data-src="assets/venue/aerial.jpg" aria-label="See it bigger: Purita Farms from up top">
+            <img src="assets/venue/aerial.jpg" alt="" width="1280" height="720" decoding="async" />
+            <span class="polaroid-caption">from up top</span>
+          </button>
+          <button class="polaroid" type="button" style="--tilt: 6deg" data-src="assets/venue/veranda.jpg" aria-label="See it bigger: the veranda">
+            <img src="assets/venue/veranda.jpg" alt="" width="1280" height="864" decoding="async" />
+            <span class="polaroid-caption">the veranda</span>
+          </button>
+          <button class="polaroid" type="button" style="--tilt: 1.5deg" data-src="assets/venue/pool.jpg" aria-label="See it bigger: the pool">
+            <img src="assets/venue/pool.jpg" alt="" width="1280" height="960" decoding="async" />
+            <span class="polaroid-caption">the pool!!</span>
+          </button>
+          <p class="venue-hint" aria-hidden="true">a peek at the place — tap a photo ↓</p>
+        </div>
+
         <!-- A torn-off strip of the notebook page below: tap to open the full sched -->
         <button class="paper-strip" id="details-toggle" type="button" aria-expanded="false" aria-controls="invite-more">
           <span class="strip-text">
@@ -227,7 +244,7 @@
         <div class="invite-more" id="invite-more" hidden>
           <section class="notebook" aria-labelledby="nb-heading">
             <h3 class="nb-heading" id="nb-heading">Batch Dos — Sched</h3>
-            <p class="nb-place"><span>@ Bakhawan Beach Home</span><span class="nb-date">Sat, Dec 26</span></p>
+            <p class="nb-place"><span>@ Purita Farms</span><span class="nb-date">Sat, Dec 26</span></p>
             <ol class="nb-list" id="program"></ol>
 
             <aside class="sticky" aria-labelledby="sticky-heading">
@@ -273,7 +290,7 @@
         <div class="rsvp rsvp-done" data-step="done" hidden>
           <span class="rsvp-check" aria-hidden="true">✓</span>
           <p class="rsvp-done-title">See you there, <span id="rsvp-done-name"></span>!</p>
-          <p class="rsvp-done-sub">Saturday, December 26 · Bakhawan Beach Home</p>
+          <p class="rsvp-done-sub">Saturday, December 26 · Purita Farms</p>
         </div>
 
         <!-- Step 3a': that name has already said yes -->
