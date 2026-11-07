@@ -888,6 +888,59 @@ body {
 }
 .sticky-foot { font-size: calc(14.5 * var(--u)); color: var(--pencil); margin-top: calc(10 * var(--u)); }
 
+/* The contribution: a till receipt taped onto the page, tilted the other way */
+.receipt {
+  position: relative;
+  width: 66%;
+  margin: calc(var(--rule) * 1.5) auto 0 calc(var(--margin) - calc(30 * var(--u)));
+  padding: calc(18 * var(--u)) calc(14 * var(--u)) calc(20 * var(--u));
+  background: #fff;
+  color: #2b2b2b;
+  font-family: ui-monospace, 'SF Mono', Menlo, 'Courier New', monospace;
+  font-size: calc(12.5 * var(--u));
+  line-height: 1.5;
+  text-transform: uppercase;
+  letter-spacing: .02em;
+  transform: rotate(2.5deg);
+  filter: drop-shadow(0 8px 8px rgba(80, 60, 0, .22));
+  /* the torn, zig-zag bottom edge */
+  --tooth: calc(8 * var(--u));
+  -webkit-mask: linear-gradient(#000 0 0) top / 100% calc(100% - var(--tooth)) no-repeat,
+    conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / calc(var(--tooth) * 2) var(--tooth) repeat-x;
+  mask: linear-gradient(#000 0 0) top / 100% calc(100% - var(--tooth)) no-repeat,
+    conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / calc(var(--tooth) * 2) var(--tooth) repeat-x;
+}
+.receipt-tape {
+  position: absolute;
+  top: calc(-2 * var(--u));
+  left: 50%;
+  width: calc(64 * var(--u));
+  height: calc(18 * var(--u));
+  margin-left: calc(-32 * var(--u));
+  background: rgba(255, 253, 235, .85);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .05);
+  transform: rotate(-4deg);
+}
+.receipt-heading {
+  font-size: calc(12.5 * var(--u));
+  font-weight: 700;
+  text-align: center;
+  padding-bottom: calc(6 * var(--u));
+  margin-bottom: calc(6 * var(--u));
+  border-bottom: 1px dashed #9a9a9a;
+}
+.receipt-row { display: flex; justify-content: space-between; gap: calc(8 * var(--u)); font-weight: 700; font-size: calc(14 * var(--u)); }
+.receipt-row--small { font-weight: 400; font-size: calc(11.5 * var(--u)); color: #666; }
+.receipt-note {
+  margin-top: calc(8 * var(--u));
+  padding-top: calc(6 * var(--u));
+  border-top: 1px dashed #9a9a9a;
+  font-size: calc(10.5 * var(--u));
+  color: #555;
+  text-transform: none;
+}
+.receipt-thanks { margin-top: calc(6 * var(--u)); text-align: center; font-size: calc(10.5 * var(--u)); color: #777; }
+
 /* RSVP */
 .rsvp {
   margin-top: calc(18 * var(--u));
@@ -1024,6 +1077,18 @@ body {
 @keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }
 .rsvp-done-title { font-size: calc(18 * var(--u)); font-weight: 600; }
 .rsvp-done-sub { font-size: calc(13.5 * var(--u)); color: var(--muted); margin-bottom: calc(6 * var(--u)); }
+/* What happens next with the ₱1,250: a soft callout in the reunion yellow */
+.rsvp-pay {
+  margin: calc(2 * var(--u)) 0 calc(8 * var(--u));
+  padding: calc(10 * var(--u)) calc(14 * var(--u));
+  border-radius: calc(12 * var(--u));
+  background: #fff6d6;
+  box-shadow: inset 0 0 0 1px #f6e3a1;
+  color: #4a3b00;
+  font-size: calc(13.5 * var(--u));
+  line-height: 1.45;
+}
+.rsvp-pay b { font-weight: 600; }
 
 /* With the details open the sheet scrolls, so the answer stays pinned to the bottom */
 .sheet.is-expanded .rsvp {
@@ -1262,6 +1327,22 @@ body {
 /* The lock-screen invite, once they've said yes */
 .notif--calendar.is-going .notif-text { color: #81c995; }
 
+/* The committee's payment message, after they RSVP: the reunion navy and yellow */
+.avatar--committee { background: linear-gradient(135deg, #0A1680, #3b5bdb 60%, #F7B94C); letter-spacing: -.02em; }
+.notif--payment .notif-text { font-size: 14px; }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+}
+
+/* Short phones (iPhone SE and the like): tighten the invite so Accept stays on screen
+   without scrolling, now that it also carries the contribution and the venue photos. */
+@media (max-height: 700px) {
+  .event-details { margin-top: calc(14 * var(--u)); gap: calc(9 * var(--u)); }
+  .venue-peek { height: calc(118 * var(--u)); margin-top: calc(28 * var(--u)); }
+  .venue-peek .polaroid { width: 35%; }
+  .venue-peek .polaroid:nth-of-type(1) { left: 2%; }
+  .venue-peek .polaroid:nth-of-type(2) { right: 2%; }
+  .venue-peek .polaroid:nth-of-type(3) { left: 32.5%; }
+  .venue-peek .polaroid-caption { font-size: calc(12.5 * var(--u)); line-height: calc(22 * var(--u)); }
 }

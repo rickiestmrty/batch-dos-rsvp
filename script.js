@@ -858,14 +858,33 @@
     Promise.all(pieces).then(() => layer.remove());
   }
 
-  // The whole send, start to finish. Resolves once the button has had its moment.
+  // After a yes: the sheet closes, the phone is locked again, and the committee's
+  // payment message lands on top of the stack with the Messenger ding.
+  const payment = document.getElementById('notif-payment');
+  const SENT_HOLD_MS = 1000;          // the green check stays up about a second, then the sheet goes
+  const PAYMENT_AFTER_LOCK_MS = 700;  // the lock screen settles, then the message
+
+  // `sentAt`: when the button turned into the green check
+  async function lockAndNotifyPayment(name, sentAt) {
+    await pause(Math.max(0, SENT_HOLD_MS - (performance.now() - sentAt)));
+    closeInvite();
+    await pause(PAYMENT_AFTER_LOCK_MS);
+    document.getElementById('payment-name').textContent = firstName(name);
+    payment.classList.remove('is-in');
+    void payment.offsetWidth; // restart the drop-in if they RSVP twice in one visit
+    payment.classList.add('is-in');
+    playDing();
+    buzz();
+  }
+
+  // The send's moment: the pill folds into a green check and the confetti goes up.
+  // Resolves once the confetti is out; the check keeps drawing on while the sheet waits.
   async function celebrate() {
     if (reduceMotion) return;
     setSendState('sent');
     await pause(480);           // pill folds into the circle
     confettiFrom(sendBtn);
     if (navigator.vibrate) navigator.vibrate([18, 60, 28]);
-    await pause(900);           // check drawn, confetti in the air
   }
 
   if (readRsvp()?.status === 'accepted') markCalendarGoing();
@@ -902,7 +921,10 @@
       setSendState('idle');
       showAlready(name);
     } else {
+      const sentAt = performance.now();
       await celebrate();
+      await lockAndNotifyPayment(name, sentAt);
+      // Behind the closed sheet: reopening the invite shows "See you there"
       showDone(name);
       setSendState('idle'); // ready if they ever come back to this step
     }

@@ -89,6 +89,23 @@
         </div>
       </article>
 
+      <!-- After they RSVP: the sheet closes, the phone locks again, and this lands on top -->
+      <article class="notif notif--messenger notif--payment" id="notif-payment" aria-live="polite">
+        <span class="avatar avatar--committee" aria-hidden="true">
+          B2
+          <span class="avatar-badge">
+            <svg viewBox="0 0 24 24"><path fill="#fff" d="M12 2C6.36 2 2 6.13 2 11.7c0 2.91 1.19 5.44 3.14 7.17.16.15.26.35.27.57l.05 1.78a.8.8 0 0 0 1.12.71l1.98-.87a.8.8 0 0 1 .53-.04c.91.25 1.88.38 2.91.38 5.64 0 10-4.13 10-9.7C22 6.13 17.64 2 12 2Zm6 7.46-2.94 4.66a1.5 1.5 0 0 1-2.17.4l-2.34-1.75a.6.6 0 0 0-.72 0l-3.16 2.4c-.42.32-.97-.18-.69-.63l2.94-4.66a1.5 1.5 0 0 1 2.17-.4l2.34 1.75a.6.6 0 0 0 .72 0l3.16-2.4c.42-.32.97.18.69.63Z"/></svg>
+          </span>
+        </span>
+        <span class="notif-body">
+          <span class="notif-head">
+            <span class="notif-app notif-app--strong">Batch Dos Committee</span>
+            <span class="notif-when">now</span>
+          </span>
+          <span class="notif-text">Salamat, <span id="payment-name">batchmate</span>! Contribution is ₱1,250 per person. One of us will message you shortly about payment.</span>
+        </span>
+      </article>
+
       <!-- Calendar invite (appears after the memories) -->
       <button class="notif notif--calendar notif--cta" id="notif-calendar" type="button" aria-haspopup="dialog" aria-label="Google Calendar invitation: Batch Dos Reunion, Saturday December 26. Tap to RSVP">
         <span class="app-icon app-icon--calendar" aria-hidden="true">
@@ -212,6 +229,12 @@
               </span>
             </span>
           </li>
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 18v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1h-9a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h9Zm-9-2h10V8H12v8Zm4-2.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Z"/></svg>
+            <span>₱1,250 per person<br/>
+              <span class="event-sub">We'll message you how to pay after you RSVP</span>
+            </span>
+          </li>
         </ul>
 
         <!-- A peek at the venue: three snapshots taped into the invite. Tap one to see it big. -->
@@ -254,6 +277,16 @@
               <div class="sticky-rows" id="swatches"></div>
               <p class="sticky-foot">pick whichever you already own :)</p>
             </aside>
+
+            <!-- The contribution, on a till receipt taped under the sticky note -->
+            <aside class="receipt" aria-labelledby="receipt-heading">
+              <span class="receipt-tape" aria-hidden="true"></span>
+              <h3 class="receipt-heading" id="receipt-heading">Batch Dos Reunion</h3>
+              <p class="receipt-row"><span>Contribution</span><span>₱1,250</span></p>
+              <p class="receipt-row receipt-row--small"><span>per person</span><span>x 1</span></p>
+              <p class="receipt-note">someone from the committee will message you how to pay after you RSVP</p>
+              <p class="receipt-thanks">*** salamat! ***</p>
+            </aside>
           </section>
         </div>
 
@@ -291,6 +324,7 @@
           <span class="rsvp-check" aria-hidden="true">✓</span>
           <p class="rsvp-done-title">See you there, <span id="rsvp-done-name"></span>!</p>
           <p class="rsvp-done-sub">Saturday, December 26 · Purita Farms</p>
+          <p class="rsvp-pay"><b>Next: ₱1,250 per person.</b> Someone from the committee will message you shortly about payment.</p>
         </div>
 
         <!-- Step 3a': that name has already said yes -->
@@ -298,6 +332,7 @@
           <span class="rsvp-check" aria-hidden="true">✓</span>
           <p class="rsvp-done-title">You've already responded, <span id="rsvp-already-name"></span>!</p>
           <p class="rsvp-done-sub">We have you down as going. See you on December 26.</p>
+          <p class="rsvp-pay"><b>₱1,250 per person.</b> Someone from the committee will message you about payment.</p>
           <button class="btn btn--ghost btn--full" id="rsvp-not-me" type="button">That's not me</button>
         </div>
 
